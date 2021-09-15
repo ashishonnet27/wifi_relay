@@ -57,7 +57,7 @@ void read_stored_prov_data()
 	printf("PROV: [%d]\n", xObjProvData.isProvisioned);
 	printf("SSID: [%s]\n", xObjProvData.ssid);
 	printf("PASS: [%s]\n", xObjProvData.password);
-
+	update_prov_data();
 }
 
 esp_err_t update_prov_data()
@@ -69,7 +69,7 @@ esp_err_t update_prov_data()
 		return ESP_FAIL;
 	fwrite(&xObjProvData, sizeof(xObjProvData), 1, fp);
 	fclose(fp);
-
+	printf("Prov data updated\n");
 	return ESP_OK;
 }
 esp_err_t get_stored_data()

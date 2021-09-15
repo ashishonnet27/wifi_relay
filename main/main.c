@@ -1,37 +1,66 @@
-/* Hello World Example
 
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
+#include "sdkconfig.h"
 
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
+
+
+
+
 
 #include "commondef.h"
+#include "wifiConnectivity.h"
+// #include "mqtt.h"
+// #include "timesync.h"
+#include "data-storage.h"
+// #include "cmdAction.h"
+// #include "peripheralControl.h"
+// #include "peripheralInit.h"
+// #include "ota.h"
 
+void task_heap_memory_print(void *pv)
+{
+	while(1)
+	{
+		ESP_LOGI("", "Free memory: %d bytes Version: %s", esp_get_free_heap_size(), VERSION);
+		vTaskDelay(pdMS_TO_TICKS(3*1000));
+	}
+}
 
 void app_main(void)
 {
-    printf("Hello world!\n");
 
-    /* Print chip information */
-    esp_chip_info_t chip_info;
-    esp_chip_info(&chip_info);
-    printf("This is ESP32 chip with %d CPU cores, WiFi%s%s, ",
-            chip_info.cores,
-            (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-            (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
+	ESP_LOGI("", " \n\n Hello world! Version = [%s]\n\n", VERSION);
 
-    printf("silicon revision %d, ", chip_info.revision);
+	commonInit();
 
-    printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
-            (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
+	ESP_ERROR_CHECK(initDataStorage());
 
-    for (int i = 10; i >= 0; i--) {
-        printf("Restarting in %d seconds...\n", i);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-    printf("Restarting now.\n");
-    fflush(stdout);
-    esp_restart();
+	get_stored_data();
+	// init_scheduler();
+
+	ESP_ERROR_CHECK(init_wifi());
+	// xTaskCreate(&sevenSegmentControlTask, "SevenSegment_Task", 4096, NULL, 5, NULL);
+
+	// xTaskCreate(&taskSyncTime, "ntp_task", 4096, NULL, 5, NULL);
+	// xTaskCreate(&peripheralControlTask, "Peripheral_control", 4096, NULL, 5, NULL);
+	// xTaskCreate(&zcrTask, "DummyTask", 4096, NULL, 5, NULL);
+	// xTaskCreate(&cmdActionTask, "Action_cmd", 4096, (void *)&xQueueAction, 5, NULL);
+
+	// xTaskCreate(&SwitchMonitorTask, "Switch_input", 4096, NULL, 4, NULL);
+
+	xTaskCreate(&task_heap_memory_print, "heap_print", 4096, NULL, 5, NULL);
+
+	if(xObjProvData.isProvisioned != 1)
+	{
+		printf("In provisioning mode\n");
+		start_provisioning();
+	}
+	else
+	{
+		start_station();
+		// xTaskCreate(&simple_ota_example_task, "OTA_task", 16*1024, NULL, 5, NULL);
+		// mqttStart();
+
+	}
+
 }
+

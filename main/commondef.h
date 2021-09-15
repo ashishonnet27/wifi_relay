@@ -22,7 +22,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
-
+#include "esp_spi_flash.h"
 #include "nvs_flash.h"
 
 #include "lwip/err.h"
@@ -43,13 +43,13 @@
 #include "version.h"
 
 
-// #define DEVICE_PREFIX	"SPECK"
+#define DEVICE_PREFIX	"SPECK"
 
 
 // #define MAX_MQTT_MSG_SIZE	256
 // #define MAX_MQTT_TPC_SIZE	64
 
-#define MAX_RELAY			5
+#define MAX_RELAY			8
 #define	MAX_SWITCH			5
 // #define MAX_RGBLED			2
 // #define	RGB_TIMEOUT			1	//Seconds

@@ -5,11 +5,15 @@
     "idf.customExtraVars": "{\"OPENOCD_SCRIPTS\":\"C:\\\\MyDrive\\\\.espressif\\\\tools\\\\openocd-esp32\\\\v0.10.0-esp32-20210401/openocd-esp32/share/openocd/scripts\",\"IDF_CCACHE_ENABLE\":\"1\"}",
     "idf.espIdfPathWin": "c:\\Users\\Athlon\\Desktop\\esp-idf",
     "idf.openOcdConfigs": [
-        "boards/esp32-wrover-kit-3.3v.cfg"
+        "interface/ftdi/esp32_devkitj_v1.cfg",
+        "target/esp32.cfg"
     ],
     "idf.pythonBinPathWin": "C:\\MyDrive\\.espressif\\python_env\\idf4.3_py3.8_env\\Scripts\\python.exe",
     "idf.toolsPathWin": "C:\\MyDrive\\.espressif",
     "files.associations": {
-        "esp_system.h": "c"
+        "esp_system.h": "c",
+        "sdkconfig.h": "c",
+        "data-storage.h": "c",
+        "cmdaction.h": "c"
     }
 }

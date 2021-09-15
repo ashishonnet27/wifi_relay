@@ -8,7 +8,7 @@
 
 #include "wifiConnectivity.h"
 #include "commondef.h"
-#include "mqtt.h"
+//#include "mqtt.h"
 #include "data-storage.h"
 
 #define CPOSTBUFSIZE 256
@@ -130,14 +130,14 @@ esp_err_t init_wifi()
 
 	uint8_t deviceETH[6];
 	esp_wifi_get_mac(WIFI_IF_STA, deviceETH);
-	sprintf(deviceName, "%s_%02X%02X%02X%02X%02X%02X", DEVICE_PREFIX, 
-		deviceETH[0], deviceETH[1], deviceETH[2],
-		deviceETH[3], deviceETH[4], deviceETH[5]);
-	sprintf(device_APName, "%s_%02X:%02X:%02X:%02X:%02X:%02X", DEVICE_PREFIX,
-			deviceETH[0], deviceETH[1], deviceETH[2],
-			deviceETH[3], deviceETH[4], deviceETH[5]);
+	// sprintf(deviceName, "%s_%02X%02X%02X%02X%02X%02X", DEVICE_PREFIX, 
+	// 	deviceETH[0], deviceETH[1], deviceETH[2],
+	// 	deviceETH[3], deviceETH[4], deviceETH[5]);
+	sprintf(device_APName, "%s","ESP_AP"); //%s_%02X:%02X:%02X:%02X:%02X:%02X", DEVICE_PREFIX,
+			// deviceETH[0], deviceETH[1], deviceETH[2],
+			// deviceETH[3], deviceETH[4], deviceETH[5]);
 
-	ESP_LOGI("", "Device name = [%s]\n", getDeviceName());
+	// ESP_LOGI("", "Device name = [%s]\n", getDeviceName());
 
 
 	ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
@@ -180,8 +180,9 @@ esp_err_t start_provisioning()
 	// configure, initialize and start the wifi driver
 	//wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	//ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
 	strcpy((char *)wifi_config.ap.ssid, device_APName);
-	strcpy((char *)wifi_config.ap.password, getDevicePass());
+	strcpy((char *)wifi_config.ap.password, "password");
 	wifi_config.ap.ssid_len = strlen(device_APName);
 	wifi_config.ap.max_connection = 4;
 	wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
@@ -253,6 +254,7 @@ esp_err_t start_provisioning()
 				xEventGroupSetBits(wifi_event_group, PROV_CONNECTING_WIFI);
 				if(xEventGroupGetBits(wifi_event_group) & PROV_CONNECTED_WIFI)
 				{
+					
 					xEventGroupClearBits(wifi_event_group, PROV_CONNECTING_WIFI);
 					nextState = prov_connected_to_router;
 					break;
@@ -268,6 +270,7 @@ esp_err_t start_provisioning()
 
 			case prov_connected_to_router:
 				u8PROVSTATE = prov_connected_to_router;
+				
 				if(xObjProvData.isProvisioned == 0)
 				{
 					xObjProvData.isProvisioned = 1;
