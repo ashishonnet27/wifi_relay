@@ -491,7 +491,7 @@ esp_err_t xPostrelaycmd(httpd_req_t *req)
 	}
 	else
 	{
-		// gpio_set_level(xObjRelay[(cJSON_GetObjectItem(root, "RL_NO")->valueint)-1].gpioNo, cJSON_GetObjectItem(root, "state")->valueint && 0x01);
+		gpio_set_level(xObjRelay[(cJSON_GetObjectItem(root, "RL_NO")->valueint)-1].gpioNo, cJSON_GetObjectItem(root, "state")->valueint && 0x01);
 	}
 	
 	cJSON_Delete(root);
