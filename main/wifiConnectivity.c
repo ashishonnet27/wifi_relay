@@ -475,6 +475,37 @@ httpd_uri_t xGetInfoUri = {
 		.user_ctx  = NULL,
 };
 
+esp_err_t xPostrelaycmd(httpd_req_t *req)
+{
+	vGetPostData(req);
+	ESP_LOGI("", "[%s]", cPostReqBuf);
+	cJSON *root = cJSON_Parse(cPostReqBuf);
+	if(cJSON_GetObjectItem(root, "RL_NO")->valueint == 0)
+	{
+		uint8_t i = 0;
+		
+		for(i=0;i<MAX_RELAY;i++)
+		{
+			gpio_set_level(xObjRelay[i].gpioNo,cJSON_GetObjectItem(root, "state")->valueint && 0x01);
+		}
+	}
+	else
+	{
+		gpio_set_level(xObjRelay[(cJSON_GetObjectItem(root, "RL_NO")->valueint)-1].gpioNo, cJSON_GetObjectItem(root, "state")->valueint && 0x01);
+	}
+	
+	cJSON_Delete(root);
+	httpd_resp_send(req, (char *)pcPostResOk, strlen(pcPostResOk));
+	return ESP_OK;
+}
+
+httpd_uri_t xPostRelayCMDUri = {
+		.uri       = "/relaycmd",
+		.method    = HTTP_POST,
+		.handler   = xPostrelaycmd,
+		.user_ctx  = NULL,
+};
+
 
 void startServer()
 {
@@ -495,6 +526,7 @@ void startServer()
 		httpd_register_uri_handler(xServer, &xPostWifiCredUri);
 		httpd_register_uri_handler(xServer, &xGetInfoUri);
 		httpd_register_uri_handler(xServer, &xPostDeviceTypeUri);
+		httpd_register_uri_handler(xServer, &xPostRelayCMDUri);
 
 	}
 

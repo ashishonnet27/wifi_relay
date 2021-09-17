@@ -115,9 +115,10 @@ void commonInit()
 	for(uint8_t i = 0; i < MAX_RELAY; i++)
 	{
 		gpio_pad_select_gpio(xObjRelay[i].gpioNo);
-		gpio_set_direction(xObjRelay[i].gpioNo, GPIO_MODE_INPUT_OUTPUT);
+		gpio_set_direction(xObjRelay[i].gpioNo, GPIO_MODE_OUTPUT);
+		// gpio_set_level(xObjRelay[i].gpioNo, 0x01);
 	}
-
+	
 	// //Switch initialization
 	// memset(xObjSwitch, 0, sizeof(xObjSwitch));
 	// xObjSwitch[0].gpioNo = SW1; 	xObjSwitch[0].display = 1;

@@ -47,7 +47,7 @@ void app_main(void)
 
 	// xTaskCreate(&SwitchMonitorTask, "Switch_input", 4096, NULL, 4, NULL);
 
-	xTaskCreate(&task_heap_memory_print, "heap_print", 4096, NULL, 5, NULL);
+	// xTaskCreate(&task_heap_memory_print, "heap_print", 4096, NULL, 5, NULL);
 
 	if(xObjProvData.isProvisioned != 1)
 	{

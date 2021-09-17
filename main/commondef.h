@@ -61,9 +61,9 @@
 #define RELAY_1_PIN				21  //IO-21
 #define RELAY_2_PIN			    19	//IO-19
 #define RELAY_3_PIN				18	//IO-18
-#define RELAY_4_PIN				17	//IO-17
-#define RELAY_5_PIN				16	//IO-16
-#define RELAY_6_PIN				18	//IO-18
+#define RELAY_4_PIN				5	//IO-17
+#define RELAY_5_PIN				17	//IO-16
+#define RELAY_6_PIN				16	//IO-18
 #define RELAY_7_PIN				4	//IO-4
 #define RELAY_8_PIN				2	//IO-2
 
