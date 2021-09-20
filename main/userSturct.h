@@ -16,6 +16,11 @@ typedef struct __xProvData__
 	char isProvisioned;
 	char ssid[32];
 	char password[64];
+	char isStatic_ip;
+	char static_ip_addr[20];
+	char static_ip_gw[20];
+	char static_ip_netmask[20];
+
 }xProvData;
 
 xProvData xObjProvData;

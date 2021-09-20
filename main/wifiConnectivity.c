@@ -11,6 +11,11 @@
 //#include "mqtt.h"
 #include "data-storage.h"
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+
 #define CPOSTBUFSIZE 256
 
 char device_APName[33];
@@ -53,7 +58,7 @@ enum
 
 uint8_t u8PROVSTATE = 0;
 uint8_t currentState, nextState;
-
+esp_netif_t *esp_netif1;
 void startServer();
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t event_id, void* event_data)
@@ -117,8 +122,7 @@ static void ip_event_handler(void * arg, esp_event_base_t event_base,int32_t eve
 
 }
 
-esp_netif_t *my_sta;
-esp_netif_ip_info_t ip_info;
+
 
 esp_err_t init_wifi()
 {
@@ -126,18 +130,10 @@ esp_err_t init_wifi()
 	tcpip_adapter_init();
 	// ESP_ERROR_CHECK(esp_netif_init());
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
-	// esp_netif_create_default_wifi_sta();
-
-    // esp_netif_dhcpc_stop(my_sta);
 	
-    // IP4_ADDR(&ip_info.ip, 192, 168, 47, 72);
-   	// IP4_ADDR(&ip_info.gw, 192, 168, 47, 188);
-   	// IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
 
-    // esp_netif_set_ip_info(my_sta, &ip_info);
-	// wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-	// ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
+    
+	
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
@@ -155,6 +151,7 @@ esp_err_t init_wifi()
 
 	ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
 	ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &ip_event_handler, NULL));
+	
 	return ESP_OK;
 
 }
@@ -163,12 +160,40 @@ esp_err_t init_wifi()
 wifi_config_t wifi_STA;
 esp_err_t start_station()
 {
-
+	
 	// strcpy((char *)wifi_STA.sta.ssid, xObjProvData.ssid);
 	// strcpy((char *)wifi_STA.sta.password, xObjProvData.password);
 	strcpy((char *)wifi_STA.sta.ssid, "athlon");
 	strcpy((char *)wifi_STA.sta.password, "w1234567");
-	
+	wifi_STA.sta.pmf_cfg.capable = true;
+	wifi_STA.sta.pmf_cfg.required = false;
+    
+	if(xObjProvData.isStatic_ip == true)
+	{
+		esp_netif_t *my_sta;
+		esp_netif_ip_info_t ip_info;
+		my_sta = esp_netif_create_default_wifi_sta();
+		esp_netif_dhcpc_stop(my_sta);
+		
+
+		struct sockaddr_in antelope;
+
+
+		inet_aton(xObjProvData.static_ip_addr, &antelope.sin_addr); // store IP in antelope
+
+		ip_info.ip.addr = antelope.sin_addr.s_addr;
+		
+		inet_aton(xObjProvData.static_ip_gw, &antelope.sin_addr); // store IP in antelope
+		ip_info.gw.addr = antelope.sin_addr.s_addr;
+
+		inet_aton(xObjProvData.static_ip_netmask, &antelope.sin_addr); // store IP in antelope
+		ip_info.netmask.addr = antelope.sin_addr.s_addr;
+
+		
+
+		esp_netif_set_ip_info(my_sta, &ip_info);
+	}
+
 	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
 	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_STA) );
@@ -176,6 +201,7 @@ esp_err_t start_station()
 	ESP_ERROR_CHECK(esp_wifi_connect());
 
 	ESP_LOGI("", "wifi_init_sta finished.");
+	startServer();
 	//ESP_LOGI("", "connect to ap SSID:%s password:%s", WIFISTASSID, WIFISTAPASS);
 	return ESP_OK;
 }
@@ -297,11 +323,20 @@ esp_err_t start_provisioning()
 
 			case prov_wrong_cred:
 				u8PROVSTATE = prov_wrong_cred;
+
 				if(CMDProv == prov_start_scan)
 				{
 					CMDProv = 0;
 					nextState = prov_start_scan;
 					ESP_ERROR_CHECK(esp_wifi_disconnect());
+				
+				}
+				else if(xEventGroupGetBits(wifi_event_group) & PROV_CONNECTED_WIFI)
+				{
+					
+					xEventGroupClearBits(wifi_event_group, PROV_CONNECTING_WIFI);
+					nextState = prov_connected_to_router;
+					break;
 				}
 				else
 					nextState = currentState;
@@ -311,7 +346,7 @@ esp_err_t start_provisioning()
 				nextState = currentState;
 				break;
 		}
-		//ESP_LOGE("", "Next State = %d", nextState);
+		ESP_LOGE("", "Next State = %d", nextState);
 		currentState = nextState;
 		vTaskDelay(pdMS_TO_TICKS(300));
 	}
@@ -435,6 +470,42 @@ httpd_uri_t xPostWifiCredUri = {
 };
 
 
+esp_err_t xPostSetStaticIp(httpd_req_t *req)
+{
+	vGetPostData(req);
+	cJSON *root = cJSON_Parse(cPostReqBuf);
+	if(cJSON_GetObjectItem(root, "setStatic")->valueint == true)
+	{
+		ESP_LOGI("", "Static Ip is Assigned !!!");	
+		xObjProvData.isStatic_ip = 1;
+		ESP_LOGI("", "IP = [%s]", cJSON_GetObjectItem(root, "ip")->valuestring);
+		ESP_LOGI("", "Gateway = [%s]", cJSON_GetObjectItem(root, "gw")->valuestring);
+		ESP_LOGI("", "Netmask = [%s]", cJSON_GetObjectItem(root, "netmask")->valuestring);
+		strcpy((char *)xObjProvData.static_ip_addr, cJSON_GetObjectItem(root, "ip")->valuestring);
+		strcpy((char *)xObjProvData.static_ip_gw, cJSON_GetObjectItem(root, "gw")->valuestring);
+		strcpy((char *)xObjProvData.static_ip_netmask, cJSON_GetObjectItem(root, "netmask")->valuestring);
+	}
+	else{
+		ESP_LOGI("", "DHCP is Enabled !!!");	
+		xObjProvData.isStatic_ip = 0;
+	}
+
+	cJSON_Delete(root);
+	httpd_resp_send(req, (char *)pcPostResOk, strlen(pcPostResOk));
+	update_prov_data();
+	
+	return ESP_OK;
+}
+
+httpd_uri_t xPostSetStaticIpUri = {
+		.uri       = "/SetStaticIp",
+		.method    = HTTP_POST,
+		.handler   = xPostSetStaticIp,
+		.user_ctx  = NULL,
+};
+
+
+
 esp_err_t xGetRootESP(httpd_req_t *req)
 {
 	httpd_resp_send(req, (char *)pcPostResOk, strlen(pcPostResOk));
@@ -542,6 +613,7 @@ void startServer()
 		httpd_register_uri_handler(xServer, &xGetInfoUri);
 		httpd_register_uri_handler(xServer, &xPostDeviceTypeUri);
 		httpd_register_uri_handler(xServer, &xPostRelayCMDUri);
+		httpd_register_uri_handler(xServer, &xPostSetStaticIpUri);
 
 	}
 
