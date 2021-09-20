@@ -117,13 +117,26 @@ static void ip_event_handler(void * arg, esp_event_base_t event_base,int32_t eve
 
 }
 
+esp_netif_t *my_sta;
+esp_netif_ip_info_t ip_info;
 
 esp_err_t init_wifi()
 {
 
 	tcpip_adapter_init();
-
+	// ESP_ERROR_CHECK(esp_netif_init());
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
+	// esp_netif_create_default_wifi_sta();
+
+    // esp_netif_dhcpc_stop(my_sta);
+	
+    // IP4_ADDR(&ip_info.ip, 192, 168, 47, 72);
+   	// IP4_ADDR(&ip_info.gw, 192, 168, 47, 188);
+   	// IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
+
+    // esp_netif_set_ip_info(my_sta, &ip_info);
+	// wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	// ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -151,9 +164,11 @@ wifi_config_t wifi_STA;
 esp_err_t start_station()
 {
 
-	strcpy((char *)wifi_STA.sta.ssid, xObjProvData.ssid);
-	strcpy((char *)wifi_STA.sta.password, xObjProvData.password);
-
+	// strcpy((char *)wifi_STA.sta.ssid, xObjProvData.ssid);
+	// strcpy((char *)wifi_STA.sta.password, xObjProvData.password);
+	strcpy((char *)wifi_STA.sta.ssid, "athlon");
+	strcpy((char *)wifi_STA.sta.password, "w1234567");
+	
 	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
 	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_STA) );

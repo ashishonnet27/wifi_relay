@@ -1,8 +1,8 @@
 idf_component_register(
-    SRCS "main.c"
-         "data-storage.c"
-         "wifiConnectivity.c"
-         "commondef.c"
+    SRCS "main.c" 
+        # "data-storage.c"
+        # "wifiConnectivity.c"
+        # "commondef.c"
     INCLUDE_DIRS ""
 )
 
