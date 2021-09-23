@@ -4,6 +4,7 @@ idf_component_register(
          "wifiConnectivity.c"
          "commondef.c"
     INCLUDE_DIRS ""
+    EMBED_FILES "index2.html"
 )
 
 

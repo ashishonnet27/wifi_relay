@@ -346,7 +346,7 @@ esp_err_t start_provisioning()
 				nextState = currentState;
 				break;
 		}
-		ESP_LOGE("", "Next State = %d", nextState);
+		// ESP_LOGE("", "Next State = %d", nextState);
 		currentState = nextState;
 		vTaskDelay(pdMS_TO_TICKS(300));
 	}
@@ -505,6 +505,26 @@ httpd_uri_t xPostSetStaticIpUri = {
 };
 
 
+esp_err_t xIndex_page(httpd_req_t *req)
+{
+	
+	/* Get handle to embedded file upload script */
+    extern const unsigned char index_start[] asm("_binary_index2_html_start");
+    extern const unsigned char index_end[]   asm("_binary_index2_html_end");
+    const size_t index_size = (index_end - index_start);
+	httpd_resp_send_chunk(req, (char *)index_start, index_size);
+	httpd_resp_sendstr_chunk(req, NULL);
+	
+	return ESP_OK;
+}
+
+httpd_uri_t xGetIndexPageUri = {
+		.uri       = "/",
+		.method    = HTTP_GET,
+		.handler   = xIndex_page,
+		.user_ctx  = NULL,
+};
+
 
 esp_err_t xGetRootESP(httpd_req_t *req)
 {
@@ -563,31 +583,41 @@ httpd_uri_t xGetInfoUri = {
 
 esp_err_t xPostrelaycmd(httpd_req_t *req)
 {
-	vGetPostData(req);
-	ESP_LOGI("", "[%s]", cPostReqBuf);
-	cJSON *root = cJSON_Parse(cPostReqBuf);
-	if(cJSON_GetObjectItem(root, "RL_NO")->valueint == 0)
+	ESP_LOGI("", "hello123");
+
+	char buf[256];
+
+	httpd_req_get_url_query_str(req, buf, sizeof(buf));
+	printf("Requested uri = %s\n",buf);
+	char relay_no[2]={0};
+	char relay_val[2]={0};
+	httpd_query_key_value(buf, "relay", relay_no, sizeof(relay_no));
+	httpd_query_key_value(buf, "state", relay_val, sizeof(relay_val));
+
+	printf("Relay No = %s is ",relay_no);
+	atoi(relay_val)? printf("ON\n"):printf("OFF\n");
+	
+	if(atoi(relay_no) == 0)
 	{
 		uint8_t i = 0;
 		
 		for(i=0;i<MAX_RELAY;i++)
 		{
-			gpio_set_level(xObjRelay[i].gpioNo,cJSON_GetObjectItem(root, "state")->valueint && 0x01);
+			gpio_set_level(xObjRelay[i].gpioNo, atoi(relay_val) && 0x01);
 		}
 	}
 	else
 	{
-		gpio_set_level(xObjRelay[(cJSON_GetObjectItem(root, "RL_NO")->valueint)-1].gpioNo, cJSON_GetObjectItem(root, "state")->valueint && 0x01);
+		gpio_set_level(xObjRelay[atoi(relay_no)-1].gpioNo, atoi(relay_val) && 0x01);
 	}
 	
-	cJSON_Delete(root);
 	httpd_resp_send(req, (char *)pcPostResOk, strlen(pcPostResOk));
 	return ESP_OK;
 }
 
 httpd_uri_t xPostRelayCMDUri = {
 		.uri       = "/relaycmd",
-		.method    = HTTP_POST,
+		.method    = HTTP_GET,
 		.handler   = xPostrelaycmd,
 		.user_ctx  = NULL,
 };
@@ -614,7 +644,8 @@ void startServer()
 		httpd_register_uri_handler(xServer, &xPostDeviceTypeUri);
 		httpd_register_uri_handler(xServer, &xPostRelayCMDUri);
 		httpd_register_uri_handler(xServer, &xPostSetStaticIpUri);
-
-	}
+		httpd_register_uri_handler(xServer, &xGetIndexPageUri);
+			
+	}			
 
 }

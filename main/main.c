@@ -49,18 +49,18 @@ void app_main(void)
 
 	// xTaskCreate(&task_heap_memory_print, "heap_print", 4096, NULL, 5, NULL);
 	// start_station();
-	if(xObjProvData.isProvisioned != 1)
-	{
-		printf("In provisioning mode\n");
-		start_provisioning();
-	}
-	else
-	{
+	// if(xObjProvData.isProvisioned != 1)
+	// {
+	// 	printf("In provisioning mode\n");
+	// 	start_provisioning();
+	// }
+	// else
+	// {
 		start_station();
 		// xTaskCreate(&simple_ota_example_task, "OTA_task", 16*1024, NULL, 5, NULL);
 		// mqttStart();
 
-	}
+	// }
 
 }
 
