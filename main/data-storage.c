@@ -57,7 +57,7 @@ void read_stored_prov_data()
 	printf("PROV: [%d]\n", xObjProvData.isProvisioned);
 	printf("SSID: [%s]\n", xObjProvData.ssid);
 	printf("PASS: [%s]\n", xObjProvData.password);
-	update_prov_data();
+	// update_prov_data();
 }
 
 esp_err_t update_prov_data()
@@ -100,6 +100,26 @@ esp_err_t get_stored_data()
 
 	return ret;
 }
+
+// void read_stored_relay_data()
+// {
+// 	FILE *fp;
+// 	fp = fopen("/spiffs/relay", "rb");
+// 	if(fp == NULL)
+// 		return;
+// 	fread(&xObjProvData, sizeof(xObjProvData), 1, fp);
+// 	fclose(fp);
+
+// 	printf("PROV: [%d]\n", xObjProvData.isProvisioned);
+// 	printf("SSID: [%s]\n", xObjProvData.ssid);
+// 	printf("PASS: [%s]\n", xObjProvData.password);
+// 	// update_prov_data();
+// }
+
+
+
+
+
 
 /*
 void readStoredSchedulerData(xRLScheduler *px)

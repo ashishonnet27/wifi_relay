@@ -79,6 +79,8 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
 	case WIFI_EVENT_STA_DISCONNECTED:
 		xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED);
 		xEventGroupSetBits(wifi_event_group, PROV_FAIL_CONNECT_WIFI);
+		gpio_set_level(WIFI_CONNECT_LED_PIN, LED_OFF);
+		ESP_LOGI("", "wifi disconnected");
 		esp_wifi_connect();
 		break;
 
@@ -115,6 +117,7 @@ static void ip_event_handler(void * arg, esp_event_base_t event_base,int32_t eve
 	ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
 	ESP_LOGI("", "got ip:%s", ip4addr_ntoa(&event->ip_info.ip));
 	xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED);
+	gpio_set_level(WIFI_CONNECT_LED_PIN, LED_ON);
 	xEventGroupSetBits(wifi_event_group, PROV_CONNECTED_WIFI);
 	xEventGroupClearBits(wifi_event_group, PROV_FAIL_CONNECT_WIFI);
 
@@ -583,10 +586,9 @@ httpd_uri_t xGetInfoUri = {
 
 esp_err_t xPostrelaycmd(httpd_req_t *req)
 {
-	ESP_LOGI("", "hello123");
-
 	char buf[256];
-
+	gpio_set_level(COMM_STATUS_LED_PIN, LED_ON);
+	gpio_set_level(CLIENT_CONNECT_LED_PIN, LED_ON);
 	httpd_req_get_url_query_str(req, buf, sizeof(buf));
 	printf("Requested uri = %s\n",buf);
 	char relay_no[2]={0};
@@ -612,6 +614,8 @@ esp_err_t xPostrelaycmd(httpd_req_t *req)
 	}
 	
 	httpd_resp_send(req, (char *)pcPostResOk, strlen(pcPostResOk));
+	gpio_set_level(COMM_STATUS_LED_PIN, LED_OFF);
+	gpio_set_level(CLIENT_CONNECT_LED_PIN, LED_OFF);
 	return ESP_OK;
 }
 

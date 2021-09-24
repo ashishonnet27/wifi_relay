@@ -89,32 +89,5 @@ typedef struct __xSwitchData__
 }xSwitchData;
 
 
-// typedef struct __xMCP79410RTC__
-// {
-// 	uint8_t sec;
-// 	uint8_t min;
-// 	uint8_t hrs;
-// 	uint8_t wday;
-// 	uint8_t mday;
-// 	uint8_t mon;
-// 	uint8_t yrs;
-// }xMCP79410RTC;
-
-// typedef struct __xRGBLED__
-// {
-// 	uint8_t red;
-// 	uint8_t	blue;
-// 	uint8_t	green;
-// }xRGBLED;
-
-// typedef struct __sched_struct__
-// {
-// 	uint8_t enable;
-// 	uint8_t day;
-// 	uint8_t start_time_HH;
-// 	uint8_t start_time_MM;
-// 	uint32_t duration;
-// 	uint8_t port;
-// }sched_def;
 
 #endif /* MAIN_USERSTURCT_H_ */

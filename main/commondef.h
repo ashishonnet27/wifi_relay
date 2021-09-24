@@ -46,8 +46,8 @@
 #define DEVICE_PREFIX	"SPECK"
 
 
-// #define MAX_MQTT_MSG_SIZE	256
-// #define MAX_MQTT_TPC_SIZE	64
+#define LED_OFF	0
+#define LED_ON	1
 
 #define MAX_RELAY			8
 #define	MAX_SWITCH			5
@@ -67,28 +67,17 @@
 #define RELAY_7_PIN				4	//IO-4
 #define RELAY_8_PIN				2	//IO-2
 
-//Switch Ports
-// #define SW1					36	//IO-36
-// #define SW2					39	//IO-39
-// #define SW3					34	//IO-34
-// #define	SW4					35	//IO-35
-// #define SW5					5	//IO-5
+//Status LED pins
+#define	WIFI_CONNECT_LED_PIN		25	//IO-25
+#define	CLIENT_CONNECT_LED_PIN		26	//IO-26
+#define	COMM_STATUS_LED_PIN 		27	//IO-27    <<----------------- Need changes
+
 
 #define SWRST				14	//IO-14
 
-//ZCD Port
-// #define ZCD					27 	//IO-27
-// #define LEC					33	//IO-33
-// #define LEO					14  //IO-14
 
-// //Switch LED pins
-// #define	RL1					2	//IO-02
-// #define	GL1					15	//IO-15
-// #define	BL1					32	//IO-32    <<----------------- Need changes
-// #define RL2					0	//IO-00
-// #define GL2					16	//IO-16
-// #define	BL2					4	//IO-04
-// #define ENRGB				12	//IO-12
+
+
 
 #define RELAY_OFF				0
 #define RELAY_ON				1
@@ -116,7 +105,6 @@ xRelayData xObjRelay[MAX_RELAY];
 xSwitchData xObjRSTSwitch;
 // xRGBLED	xObjRGBLED[MAX_RGBLED];
 
-// xMCP79410RTC xObjMCP79410RTC;
 
 int WIFI_CONNECTED;
 int AP_ON;
