@@ -1,0 +1,279 @@
+<!DOCTYPE HTML><html>
+<head>
+    <title>Web Relay Controller</title>
+  <meta name="viewport" content="width=device-width, initial-scale=0.5">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    html {font-family: Arial; display: inline-block; text-align: center;}
+
+    h2 {font-size: 3.0rem;}
+    p {font-size: 3.0rem;}
+    body {max-width: 100%; max-height: 100%; margin:0px auto; padding-bottom: 25px;}
+    .switch {position: relative; display: inline-block; width: 100px; height: 40px} 
+    .switch input {display: none}
+    .slider {position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px}
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 24px;
+      width: 24px;
+      left: 11px;
+      bottom: 8px;
+      background-color: #fff;
+      -webkit-transition: .4s;
+      transition: .4s;
+      border-radius: 68px
+    }
+    .slider:after {
+      content:'OFF';
+      color: black;
+      display: block;
+      position: absolute;
+      transform: translate(-50%,-50%);
+      top: 50%;
+      left: 50%;
+      font-size: 12px;
+      font-family: Verdana, sans-serif;
+    }
+    input:checked+.slider {background-color: #2196F3}
+    input:checked+.slider:before {-webkit-transform: translateX(52px); -ms-transform: translateX(52px); transform: translateX(52px)}
+    input:checked+.slider:after {content:'ON'; color: white;}
+  </style>
+  
+  <style>
+  .btn {
+    background-color: DodgerBlue;
+    border: none;
+    color: white;
+    padding: 12px 16px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  /* Darker background on mouse-over */
+  .btn:hover {
+    background-color: RoyalBlue;
+  }
+  </style>
+  <style>
+    
+    
+    .header {
+      overflow: hidden;
+      background-color: #0e9fff;
+      padding: 20px 10px;
+      style="width:100%;";
+    }
+    
+    .header a {
+      float: left;
+      color: black;
+      text-align: center;
+      padding: 12px;
+      text-decoration: none;
+      font-size: 18px; 
+      line-height: 25px;
+      border-radius: 4px;
+    }
+    
+    .header a.logo {
+      font-size: 50px;
+      font-weight: bold;
+      color: rgb(255, 255, 255);
+    }
+    
+    .header a:hover {
+      
+      color: black;
+    }
+    
+    .header a.active {
+      background-color: rgb(218, 237, 255);
+      color: white;
+    }
+    
+    .header-right {
+      float: right;
+    }
+    
+    @media screen and (max-width: 600px) {
+      .header a {
+        float: none;
+        display: block;
+        text-align: left;
+      }
+      
+      .header-right {
+        float: none;
+      }
+    }
+    th, td {
+    padding: 0px;
+    }
+    
+    #wifi_div {
+        background-color: rgb(239, 239, 255);
+        
+        border-radius:  30px;
+        
+        padding-left: 80px;
+        margin: auto;
+        text-align:left;
+    }
+ 
+
+    </style>
+    
+</head>
+<body>
+  <div class="header"> 
+    <a id="root_btn"  href="/" class="logo" >Web Relay Controller</a>
+    <div class="header-right">
+      <a id="home_btn" href="/" ><i class="fa fa-home"></i>Home</a>
+      <a id="settings_btn" href="/settings" ><i class="fa fa-gear"></i>Settings</a>
+      <a id="info_btn" href="/info" ><i class="fa fa-info"></i>nfo</a>
+    </div>
+  </div><br>
+  <div id="wifi_div" >
+      <h3 ><i class="fa fa-wifi"></i> Wi-Fi Settings</h3>
+      <form id="wificred_form">
+        <label for="wifi_ssid">SSID:</label><input type="text" id="wifi_ssid" name="ssid" value=""><br>
+        <label for="wifi_pw">Password:</label><input type="text" id="wifi_pw" name="password" value=""><br><br>
+        <input type="button" id="wifi_submit" onclick=setconfig(this)  value="Submit">
+      </form> 
+      
+      
+  
+</div>
+
+<script>
+
+
+function setconfig(element)
+{
+    console.log("Submit Button is Clicked!!!")
+    
+    var form = document.getElementById('wificred_form');
+    var formData = new FormData(form);
+    //open the request
+    var xhr = new XMLHttpRequest();
+    
+
+    //send the form data
+    // xhr.send(JSON.stringify(Object.fromEntries(formData)));
+
+    
+
+
+
+
+    
+    var wifi_ssid_str = document.getElementById("wifi_ssid").value;
+    var wifi_pw_str = document.getElementById("wifi_pw").value;
+    if(wifi_ssid_str == "")
+    {
+        alert("Please Enter Data");
+    }
+    else if(wifi_pw_str == "")
+    {
+        alert("Please Enter Data");
+    }
+    else
+    {
+
+        
+        switch(element)
+        {
+            case wifi_submit:
+                // xhr.open("POST", "/wificred?ssid="+document.getElementById("wifi_ssid").value+"&pass="+document.getElementById("wifi_pw").value, true);
+                xhr.open("POST", "/wificred", true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                var j = {
+                    "ssid":wifi_ssid_str,
+                    "pass":wifi_pw_str,
+                };
+                console.log(j);
+                xhr.send(JSON.stringify(j));
+
+                break;
+            case wifi_submit:
+                xhr.open("POST", "/dhcp_config?dhcp="+document.getElementById("wifi_ssid").value+"&wifi_pw="+document.getElementById("wifi_pw").value, true);
+                break
+            default:
+                break;
+        }
+        
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == XMLHttpRequest.DONE) {
+                form.reset(); //reset form after AJAX success or do something else
+            }
+        }
+        
+        
+        alert("Settings Saved Successfully !!!");
+    }
+}
+
+
+function toggleCheckbox(element) {
+  var xhr = new XMLHttpRequest();
+  if(element.checked){ xhr.open("GET", "/relaycmd?relay="+element.id+"&state=1", true); }
+  else { xhr.open("GET", "/relaycmd?relay="+element.id+"&state=0", true); }
+  xhr.send();
+  
+  if(element.id == "0")
+  {
+    if(element.checked)
+    {
+      document.getElementById('1').checked = true;
+      document.getElementById('2').checked = true;
+      document.getElementById('3').checked = true;
+      document.getElementById('4').checked = true;
+      document.getElementById('5').checked = true;
+      document.getElementById('6').checked = true;
+      document.getElementById('7').checked = true;
+      document.getElementById('8').checked = true;
+      
+    }
+    else
+    {
+      document.getElementById('1').checked = false;
+      document.getElementById('2').checked = false;
+      document.getElementById('3').checked = false;
+      document.getElementById('4').checked = false;
+      document.getElementById('5').checked = false;
+      document.getElementById('6').checked = false;
+      document.getElementById('7').checked = false;
+      document.getElementById('8').checked = false;
+
+    }
+    
+  }
+  else if(document.getElementById('1').checked &
+          document.getElementById('2').checked &
+          document.getElementById('3').checked &
+          document.getElementById('4').checked &
+          document.getElementById('5').checked &
+          document.getElementById('6').checked &
+          document.getElementById('7').checked &
+          document.getElementById('8').checked 
+        )
+  {
+    console.log("all on");
+    document.getElementById('0').checked = true;
+  }
+  else
+  {
+    document.getElementById('0').checked = false;
+  }
+  
+}
+
+
+
+
+
+</script>
+
+</body>
+</html>

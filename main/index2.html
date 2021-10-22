@@ -1,30 +1,32 @@
 <!DOCTYPE HTML><html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    html {font-family: Arial; display: inline-block; text-align: center;}
-    h2 {font-size: 3.0rem;}
-    p {font-size: 3.0rem;}
-    body {max-width: 600px; margin:0px auto; padding-bottom: 25px;}
-    .switch {position: relative; display: inline-block; width: 120px; height: 68px} 
-    .switch input {display: none}
-    .slider {position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px}
-    .slider:before {position: absolute; content: ""; height: 52px; width: 52px; left: 8px; bottom: 8px; background-color: #fff; -webkit-transition: .4s; transition: .4s; border-radius: 68px}
-    input:checked+.slider {background-color: #2196F3}
-    input:checked+.slider:before {-webkit-transform: translateX(52px); -ms-transform: translateX(52px); transform: translateX(52px)}
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+      html {font-family: Arial; display: inline-block; text-align: center;}
+      h2 {font-size: 3.0rem;}
+      p {font-size: 3.0rem;}
+      body {max-width: 600px; margin:0px auto; padding-bottom: 25px;}
+      .switch {position: relative; display: inline-block; width: 120px; height: 68px} 
+      .switch input {display: none}
+      .slider {position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px}
+      .slider:before {position: absolute; content: ""; height: 52px; width: 52px; left: 8px; bottom: 8px; background-color: #fff; -webkit-transition: .4s; transition: .4s; border-radius: 68px}
+      input:checked+.slider {background-color: #2196F3}
+      input:checked+.slider:before {-webkit-transform: translateX(52px); -ms-transform: translateX(52px); transform: translateX(52px)}
+    </style>
 </head>
 <body>
-  <h2>ESP Relay Controller</h2>
-  <h4>Relay #1 - GPIO 4</h4><label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="1"  ><span class="slider"></span></label>
-  <h4>Relay #2 - GPIO 4</h4><label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="2"  ><span class="slider"></span></label>
-  <h4>Relay #3 - GPIO 4</h4><label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="3"  ><span class="slider"></span></label>
-  <h4>Relay #4 - GPIO 4</h4><label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="4"  ><span class="slider"></span></label>
-  <h4>Relay #5 - GPIO 4</h4><label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="5"  ><span class="slider"></span></label>
-  <h4>Relay #6 - GPIO 4</h4><label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="6"  ><span class="slider"></span></label>
-  <h4>Relay #7 - GPIO 4</h4><label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="7"  ><span class="slider"></span></label>
-  <h4>Relay #8 - GPIO 4</h4><label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="8"  ><span class="slider"></span></label>
-  <h4>ALL Relay</h4><label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="0"  ><span class="slider"></span></label>
+  <h2>Relay Controller</h2>
+  <button id="demo" onclick="window.location.href='/settings'">Settings <i class="fa fa-gear"></i></button>
+  <h4>Relay 1 <label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="1"  ><span class="slider"></span></label></h4>
+  <h4>Relay 2 <label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="2"  ><span class="slider"></span></label></h4>
+  <h4>Relay 3 <label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="3"  ><span class="slider"></span></label></h4>
+  <h4>Relay 4 <label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="4"  ><span class="slider"></span></label></h4>
+  <h4>Relay 5 <label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="5"  ><span class="slider"></span></label></h4>
+  <h4>Relay 6 <label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="6"  ><span class="slider"></span></label></h4>
+  <h4>Relay 7 <label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="7"  ><span class="slider"></span></label></h4>
+  <h4>Relay 8 <label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="8"  ><span class="slider"></span></label></h4>
+  <h4>ALL Relay <label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="0"  ><span class="slider"></span></label></h4>
 
 
 
@@ -34,6 +36,13 @@
   if(element.checked){ xhr.open("GET", "/relaycmd?relay="+element.id+"&state=1", true); }
   else { xhr.open("GET", "/relaycmd?relay="+element.id+"&state=0", true); }
   xhr.send();
-}</script>
+}
+function myFunction() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/settings", true);
+  
+  xhr.send();
+}
+</script>
 </body>
 </html>

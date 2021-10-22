@@ -52,10 +52,11 @@ void app_main(void)
 	// if(xObjProvData.isProvisioned != 1)
 	// {
 	// 	printf("In provisioning mode\n");
-	// 	start_provisioning();
+		// start_provisioning();
 	// }
 	// else
 	// {
+		xObjProvData.isProvisioned = 1;
 		start_station();
 		// xTaskCreate(&simple_ota_example_task, "OTA_task", 16*1024, NULL, 5, NULL);
 		// mqttStart();

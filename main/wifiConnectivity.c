@@ -452,16 +452,28 @@ esp_err_t xPostWifiCred(httpd_req_t *req)
 	httpd_resp_send(req, (char *)pcPostResOk, strlen(pcPostResOk));
 
 	ESP_LOGI("", "connecting");
-
-	if(u8PROVSTATE == prov_wrong_cred)
+	if(xObjProvData.isProvisioned != 1)
+	{
+		if(u8PROVSTATE == prov_wrong_cred)
 		ESP_ERROR_CHECK(esp_wifi_disconnect());
 
-	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_configSTA));
-	ESP_ERROR_CHECK(esp_wifi_connect());
-	nextState = prov_conecting_network;
-	currentState = prov_conecting_network;
-	xEventGroupSetBits(wifi_event_group, PROV_CONNECTING_WIFI);
-	xEventGroupClearBits(wifi_event_group, PROV_CONNECTED_WIFI | PROV_FAIL_CONNECT_WIFI);
+		ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_configSTA));
+		ESP_ERROR_CHECK(esp_wifi_connect());
+		
+		nextState = prov_conecting_network;
+		currentState = prov_conecting_network;
+		xEventGroupSetBits(wifi_event_group, PROV_CONNECTING_WIFI);
+		xEventGroupClearBits(wifi_event_group, PROV_CONNECTED_WIFI | PROV_FAIL_CONNECT_WIFI);
+	}
+	else
+	{
+		ESP_ERROR_CHECK(esp_wifi_disconnect());
+
+		ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_configSTA));
+		ESP_ERROR_CHECK(esp_wifi_connect());
+		startServer();		
+	}
+	
 	return ESP_OK;
 }
 
@@ -512,8 +524,8 @@ esp_err_t xIndex_page(httpd_req_t *req)
 {
 	
 	/* Get handle to embedded file upload script */
-    extern const unsigned char index_start[] asm("_binary_index2_html_start");
-    extern const unsigned char index_end[]   asm("_binary_index2_html_end");
+    extern const unsigned char index_start[] asm("_binary_home_html_start");
+    extern const unsigned char index_end[]   asm("_binary_home_html_end");
     const size_t index_size = (index_end - index_start);
 	httpd_resp_send_chunk(req, (char *)index_start, index_size);
 	httpd_resp_sendstr_chunk(req, NULL);
@@ -527,6 +539,32 @@ httpd_uri_t xGetIndexPageUri = {
 		.handler   = xIndex_page,
 		.user_ctx  = NULL,
 };
+
+esp_err_t xSettings_page(httpd_req_t *req)
+{
+	
+	/* Get handle to embedded file upload script */
+	
+    // httpd_resp_send(req, NULL, 0);  // Response body can be empty
+    extern const unsigned char set_start[] asm("_binary_settings_html_start");
+    extern const unsigned char set_end[]   asm("_binary_settings_html_end");
+    const size_t set_size = (set_end - set_start);
+	httpd_resp_send_chunk(req, (char *)set_start, set_size);
+	httpd_resp_sendstr_chunk(req, NULL);
+	// httpd_resp_set_status(req, "303 See Other");
+    // httpd_resp_set_hdr(req, "Location", "/");
+	// httpd_resp_sendstr(req, "File uploaded successfully");
+	ESP_LOGI("", "setting page uri called");
+	return ESP_OK;
+}
+
+httpd_uri_t xGetSettingsPageUri = {
+		.uri       = "/settings",
+		.method    = HTTP_GET,
+		.handler   = xSettings_page,
+		.user_ctx  = NULL,
+};
+
 
 
 esp_err_t xGetRootESP(httpd_req_t *req)
@@ -591,7 +629,7 @@ esp_err_t xPostrelaycmd(httpd_req_t *req)
 	gpio_set_level(CLIENT_CONNECT_LED_PIN, LED_ON);
 	httpd_req_get_url_query_str(req, buf, sizeof(buf));
 	printf("Requested uri = %s\n",buf);
-	char relay_no[2]={0};
+	char relay_no[3]={0};
 	char relay_val[2]={0};
 	httpd_query_key_value(buf, "relay", relay_no, sizeof(relay_no));
 	httpd_query_key_value(buf, "state", relay_val, sizeof(relay_val));
@@ -634,8 +672,8 @@ void startServer()
 	ESP_LOGI("", "Stared Server for provisioning");
 
 	httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-	config.max_uri_handlers = 10;
-
+	config.max_uri_handlers = 15;
+	config.uri_match_fn = httpd_uri_match_wildcard;
 	if(httpd_start(&xServer, &config) == ESP_OK)
 	{
 
@@ -649,6 +687,8 @@ void startServer()
 		httpd_register_uri_handler(xServer, &xPostRelayCMDUri);
 		httpd_register_uri_handler(xServer, &xPostSetStaticIpUri);
 		httpd_register_uri_handler(xServer, &xGetIndexPageUri);
+		httpd_register_uri_handler(xServer, &xGetSettingsPageUri);
+		
 			
 	}			
 
