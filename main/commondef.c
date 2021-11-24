@@ -127,7 +127,7 @@ void commonInit()
 	// xObjSwitch[3].gpioNo = SW4; 	xObjSwitch[3].display = 4;
 	// xObjSwitch[4].gpioNo = SW5; 	xObjSwitch[4].display = 5;
 
-	xObjRSTSwitch.gpioNo = SWRST;	
+	// xObjRSTSwitch.gpioNo = SWRST;	
 	// xObjRSTSwitch.display = 19;
 
 	// xObjRGBLED[0].red = RL1;	xObjRGBLED[1].red = RL2;
@@ -140,6 +140,8 @@ void commonInit()
 		gpio_pad_select_gpio(WIFI_CONNECT_LED_PIN); gpio_set_direction(WIFI_CONNECT_LED_PIN, GPIO_MODE_OUTPUT);
 		gpio_pad_select_gpio(CLIENT_CONNECT_LED_PIN); gpio_set_direction(CLIENT_CONNECT_LED_PIN, GPIO_MODE_OUTPUT);
 		gpio_pad_select_gpio(COMM_STATUS_LED_PIN); gpio_set_direction(COMM_STATUS_LED_PIN, GPIO_MODE_OUTPUT);
+		gpio_pad_select_gpio(RESET_INPUT_PIN); gpio_set_direction(RESET_INPUT_PIN, GPIO_MODE_INPUT);
+		
 	// }
 
 	//MCP79410 Initialization
@@ -159,6 +161,7 @@ void commonInit()
 		gpio_set_level(WIFI_CONNECT_LED_PIN, LED_OFF);
 		gpio_set_level(CLIENT_CONNECT_LED_PIN, LED_OFF);
 		gpio_set_level(COMM_STATUS_LED_PIN, LED_OFF);
+		
 	// }
 
 	// gpio_set_level(ENRGB, 1);

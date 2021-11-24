@@ -11,10 +11,13 @@
 // #include "mqtt.h"
 // #include "timesync.h"
 #include "data-storage.h"
+#include "tcp_server.h"
 // #include "cmdAction.h"
 // #include "peripheralControl.h"
 // #include "peripheralInit.h"
 // #include "ota.h"
+
+
 
 void task_heap_memory_print(void *pv)
 {
@@ -36,7 +39,14 @@ void app_main(void)
 
 	get_stored_data();
 	// init_scheduler();
-
+	int j;
+	
+	for(j=7;j>=0;j--)
+	{
+		gpio_set_level(xObjRelay[j].gpioNo, (xObjProvRelayData.relay_state>>j) & 0x01);
+		
+	}
+	
 	ESP_ERROR_CHECK(init_wifi());
 	// xTaskCreate(&sevenSegmentControlTask, "SevenSegment_Task", 4096, NULL, 5, NULL);
 
@@ -49,19 +59,37 @@ void app_main(void)
 
 	// xTaskCreate(&task_heap_memory_print, "heap_print", 4096, NULL, 5, NULL);
 	// start_station();
-	// if(xObjProvData.isProvisioned != 1)
-	// {
-	// 	printf("In provisioning mode\n");
-		// start_provisioning();
-	// }
-	// else
-	// {
-		xObjProvData.isProvisioned = 1;
+	;
+		
+	if((xObjProvData.isProvisioned != 1) | (!gpio_get_level(RESET_INPUT_PIN)))
+	{
+		printf("In provisioning mode\n");
+		start_provisioning();
+	}
+	else
+	{
+		
 		start_station();
+		
 		// xTaskCreate(&simple_ota_example_task, "OTA_task", 16*1024, NULL, 5, NULL);
 		// mqttStart();
 
-	// }
+	}
+	bool toggle=0;
+	while(1)
+	{
+		if(!gpio_get_level(RESET_INPUT_PIN))
+		{
+			esp_restart();
+		}
+		if(xEventGroupGetBits(wifi_event_group) & AP_ON)
+		{
+			gpio_set_level(WIFI_CONNECT_LED_PIN, !toggle);
+			toggle = !toggle;
+		}
+		vTaskDelay(100);
+
+	}
 
 }
 

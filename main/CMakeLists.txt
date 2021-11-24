@@ -3,8 +3,9 @@ idf_component_register(
          "data-storage.c"
          "wifiConnectivity.c"
          "commondef.c"
+         "tcp_server.c"
     INCLUDE_DIRS ""
-    EMBED_FILES "home.html" "settings.html" 
+    EMBED_FILES "home.html" "settings.html" "info.html"
 )
 
 

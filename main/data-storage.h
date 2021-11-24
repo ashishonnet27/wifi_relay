@@ -18,6 +18,8 @@ esp_err_t get_stored_data();
 void read_stored_prov_data();
 esp_err_t update_prov_data();
 
+void read_stored_relay_data();
+esp_err_t update_prov_relay_data();
 // void readStoredSchedulerData(xRLScheduler *);
 // void updateStoredSchedulerData(xRLScheduler *);
 

@@ -10,11 +10,10 @@
 #include "commondef.h"
 //#include "mqtt.h"
 #include "data-storage.h"
-
+#include "tcp_server.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
 
 #define CPOSTBUFSIZE 256
 
@@ -145,7 +144,7 @@ esp_err_t init_wifi()
 	// sprintf(deviceName, "%s_%02X%02X%02X%02X%02X%02X", DEVICE_PREFIX, 
 	// 	deviceETH[0], deviceETH[1], deviceETH[2],
 	// 	deviceETH[3], deviceETH[4], deviceETH[5]);
-	sprintf(device_APName, "%s","ESP_AP"); //%s_%02X:%02X:%02X:%02X:%02X:%02X", DEVICE_PREFIX,
+	sprintf(device_APName, "%s_%02X%02X","WEB_RELAY_AP", deviceETH[4], deviceETH[5]); //%s_%02X:%02X:%02X:%02X:%02X:%02X", DEVICE_PREFIX,
 			// deviceETH[0], deviceETH[1], deviceETH[2],
 			// deviceETH[3], deviceETH[4], deviceETH[5]);
 
@@ -164,10 +163,10 @@ wifi_config_t wifi_STA;
 esp_err_t start_station()
 {
 	
-	// strcpy((char *)wifi_STA.sta.ssid, xObjProvData.ssid);
-	// strcpy((char *)wifi_STA.sta.password, xObjProvData.password);
-	strcpy((char *)wifi_STA.sta.ssid, "athlon");
-	strcpy((char *)wifi_STA.sta.password, "w1234567");
+	strcpy((char *)wifi_STA.sta.ssid, xObjProvData.ssid);
+	strcpy((char *)wifi_STA.sta.password, xObjProvData.password);
+	// strcpy((char *)wifi_STA.sta.ssid, "athlon");
+	// strcpy((char *)wifi_STA.sta.password, "w1234567");
 	wifi_STA.sta.pmf_cfg.capable = true;
 	wifi_STA.sta.pmf_cfg.required = false;
     
@@ -204,6 +203,7 @@ esp_err_t start_station()
 	ESP_ERROR_CHECK(esp_wifi_connect());
 
 	ESP_LOGI("", "wifi_init_sta finished.");
+	xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
 	startServer();
 	//ESP_LOGI("", "connect to ap SSID:%s password:%s", WIFISTASSID, WIFISTAPASS);
 	return ESP_OK;
@@ -235,125 +235,127 @@ esp_err_t start_provisioning()
 	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
 	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+	ESP_ERROR_CHECK(esp_wifi_start());
+	vTaskDelay(100);
 
-	currentState = prov_start;
+	// currentState = prov_start;
 
-	currentState = prov_start;
+	// currentState = prov_start;
 
-	while(1)
-	{
-		switch (currentState)
-		{
-		case prov_start:
-			ESP_ERROR_CHECK(esp_wifi_start());
-			u8PROVSTATE = prov_start;
-			switch(CMDProv)
-			{
-			case prov_start_scan:
-				nextState = prov_start_scan;
-				break;
-			default:
-				nextState = prov_start;
-				break;
-			}
-			break;
+	// while(1)
+	// {
+	// 	switch (currentState)
+	// 	{
+	// 	case prov_start:
+	// 		ESP_ERROR_CHECK(esp_wifi_start());
+	// 		u8PROVSTATE = prov_start;
+	// 		switch(CMDProv)
+	// 		{
+	// 		case prov_start_scan:
+	// 			nextState = prov_start_scan;
+	// 			break;
+	// 		default:
+	// 			nextState = prov_start;
+	// 			break;
+	// 		}
+	// 		break;
 
-			case prov_start_scan:
-				u8PROVSTATE = prov_scanning;
-				CMDProv = 0;
-				xEventGroupClearBits(wifi_event_group, PROV_CONNECTING_WIFI | PROV_CONNECTING_WIFI | PROV_FAIL_CONNECT_WIFI);
-				ESP_ERROR_CHECK(esp_wifi_start());
-				ESP_LOGI("","Start scanning...");
-				ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
-				ESP_LOGI(""," completed!\n");
-				nextState = prov_done_scanning;
-				break;
+	// 		case prov_start_scan:
+	// 			u8PROVSTATE = prov_scanning;
+	// 			CMDProv = 0;
+	// 			xEventGroupClearBits(wifi_event_group, PROV_CONNECTING_WIFI | PROV_CONNECTING_WIFI | PROV_FAIL_CONNECT_WIFI);
+	// 			ESP_ERROR_CHECK(esp_wifi_start());
+	// 			ESP_LOGI("","Start scanning...");
+	// 			ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
+	// 			ESP_LOGI(""," completed!\n");
+	// 			nextState = prov_done_scanning;
+	// 			break;
 
-			case prov_done_scanning:
-				u8PROVSTATE = prov_done_scanning;
-				if(u8ApListEntry != 0)
-				{
-					u8ApListEntry = 0;
-					free(xApList);
-				}
-				esp_wifi_scan_get_ap_num((uint16_t *)&u8ApListEntry);
-				xApList = malloc(u8ApListEntry * sizeof(wifi_ap_record_t));
-				ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records((uint16_t *)&u8ApListEntry, xApList));
-				nextState = prov_wait_for_cred;
-				break;
+	// 		case prov_done_scanning:
+	// 			u8PROVSTATE = prov_done_scanning;
+	// 			if(u8ApListEntry != 0)
+	// 			{
+	// 				u8ApListEntry = 0;
+	// 				free(xApList);
+	// 			}
+	// 			esp_wifi_scan_get_ap_num((uint16_t *)&u8ApListEntry);
+	// 			xApList = malloc(u8ApListEntry * sizeof(wifi_ap_record_t));
+	// 			ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records((uint16_t *)&u8ApListEntry, xApList));
+	// 			nextState = prov_wait_for_cred;
+	// 			break;
 
-			case prov_wait_for_cred:
-				u8PROVSTATE = prov_wait_for_cred;
-				if(CMDProv == prov_start_scan)
-				{
-					CMDProv = 0;
-					nextState = prov_start_scan;
-				}
-				else
-					nextState = prov_wait_for_cred;
-				break;
+	// 		case prov_wait_for_cred:
+	// 			u8PROVSTATE = prov_wait_for_cred;
+	// 			if(CMDProv == prov_start_scan)
+	// 			{
+	// 				CMDProv = 0;
+	// 				nextState = prov_start_scan;
+	// 			}
+	// 			else
+	// 				nextState = prov_wait_for_cred;
+	// 			break;
 
-			case prov_conecting_network:
-				u8PROVSTATE = prov_conecting_network;
-				xEventGroupSetBits(wifi_event_group, PROV_CONNECTING_WIFI);
-				if(xEventGroupGetBits(wifi_event_group) & PROV_CONNECTED_WIFI)
-				{
+	// 		case prov_conecting_network:
+	// 			u8PROVSTATE = prov_conecting_network;
+	// 			xEventGroupSetBits(wifi_event_group, PROV_CONNECTING_WIFI);
+	// 			if(xEventGroupGetBits(wifi_event_group) & PROV_CONNECTED_WIFI)
+	// 			{
 					
-					xEventGroupClearBits(wifi_event_group, PROV_CONNECTING_WIFI);
-					nextState = prov_connected_to_router;
-					break;
-				}
-				if(xEventGroupGetBits(wifi_event_group) & PROV_FAIL_CONNECT_WIFI)
-				{
-					xEventGroupClearBits(wifi_event_group, PROV_CONNECTING_WIFI);
-					nextState = prov_wrong_cred;
-					break;
-				}
-				nextState = prov_conecting_network;
-				break;
+	// 				xEventGroupClearBits(wifi_event_group, PROV_CONNECTING_WIFI);
+	// 				nextState = prov_connected_to_router;
+	// 				break;
+	// 			}
+	// 			if(xEventGroupGetBits(wifi_event_group) & PROV_FAIL_CONNECT_WIFI)
+	// 			{
+	// 				xEventGroupClearBits(wifi_event_group, PROV_CONNECTING_WIFI);
+	// 				nextState = prov_wrong_cred;
+	// 				break;
+	// 			}
+	// 			nextState = prov_conecting_network;
+	// 			break;
 
-			case prov_connected_to_router:
-				u8PROVSTATE = prov_connected_to_router;
+	// 		case prov_connected_to_router:
+	// 			u8PROVSTATE = prov_connected_to_router;
 				
-				if(xObjProvData.isProvisioned == 0)
-				{
-					xObjProvData.isProvisioned = 1;
-					strcpy(xObjProvData.ssid, (char *)wifi_configSTA.sta.ssid);
-					strcpy(xObjProvData.password, (char *)wifi_configSTA.sta.password);
-					update_prov_data();
-				}
-				break;
+	// 			if(xObjProvData.isProvisioned == 0)
+	// 			{
+	// 				xObjProvData.isProvisioned = 1;
+	// 				strcpy(xObjProvData.ssid, (char *)wifi_configSTA.sta.ssid);
+	// 				strcpy(xObjProvData.password, (char *)wifi_configSTA.sta.password);
+	// 				update_prov_data();
+	// 			}
+	// 			break;
 
-			case prov_wrong_cred:
-				u8PROVSTATE = prov_wrong_cred;
+	// 		case prov_wrong_cred:
+	// 			u8PROVSTATE = prov_wrong_cred;
 
-				if(CMDProv == prov_start_scan)
-				{
-					CMDProv = 0;
-					nextState = prov_start_scan;
-					ESP_ERROR_CHECK(esp_wifi_disconnect());
+	// 			if(CMDProv == prov_start_scan)
+	// 			{
+	// 				CMDProv = 0;
+	// 				nextState = prov_start_scan;
+	// 				ESP_ERROR_CHECK(esp_wifi_disconnect());
 				
-				}
-				else if(xEventGroupGetBits(wifi_event_group) & PROV_CONNECTED_WIFI)
-				{
+	// 			}
+	// 			else if(xEventGroupGetBits(wifi_event_group) & PROV_CONNECTED_WIFI)
+	// 			{
 					
-					xEventGroupClearBits(wifi_event_group, PROV_CONNECTING_WIFI);
-					nextState = prov_connected_to_router;
-					break;
-				}
-				else
-					nextState = currentState;
-				break;
+	// 				xEventGroupClearBits(wifi_event_group, PROV_CONNECTING_WIFI);
+	// 				nextState = prov_connected_to_router;
+	// 				break;
+	// 			}
+	// 			else
+	// 				nextState = currentState;
+	// 			break;
 
-			default:
-				nextState = currentState;
-				break;
-		}
-		// ESP_LOGE("", "Next State = %d", nextState);
-		currentState = nextState;
-		vTaskDelay(pdMS_TO_TICKS(300));
-	}
-
+	// 		default:
+	// 			nextState = currentState;
+	// 			break;
+	// 	}
+	// 	// ESP_LOGE("", "Next State = %d", nextState);
+	// 	currentState = nextState;
+	// 	vTaskDelay(pdMS_TO_TICKS(300));
+	// }
+	startServer();
 	return ESP_OK;
 
 }
@@ -454,16 +456,20 @@ esp_err_t xPostWifiCred(httpd_req_t *req)
 	ESP_LOGI("", "connecting");
 	if(xObjProvData.isProvisioned != 1)
 	{
-		if(u8PROVSTATE == prov_wrong_cred)
-		ESP_ERROR_CHECK(esp_wifi_disconnect());
+		// if(u8PROVSTATE == prov_wrong_cred)
+		// ESP_ERROR_CHECK(esp_wifi_disconnect());
 
-		ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_configSTA));
-		ESP_ERROR_CHECK(esp_wifi_connect());
+		// ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_configSTA));
+		// ESP_ERROR_CHECK(esp_wifi_connect());
 		
-		nextState = prov_conecting_network;
-		currentState = prov_conecting_network;
-		xEventGroupSetBits(wifi_event_group, PROV_CONNECTING_WIFI);
-		xEventGroupClearBits(wifi_event_group, PROV_CONNECTED_WIFI | PROV_FAIL_CONNECT_WIFI);
+		// nextState = prov_conecting_network;
+		// currentState = prov_conecting_network;
+		// xEventGroupSetBits(wifi_event_group, PROV_CONNECTING_WIFI);
+		// xEventGroupClearBits(wifi_event_group, PROV_CONNECTED_WIFI | PROV_FAIL_CONNECT_WIFI);
+		xObjProvData.isProvisioned = 1;
+		strcpy(xObjProvData.ssid, (char *)wifi_configSTA.sta.ssid);
+		strcpy(xObjProvData.password, (char *)wifi_configSTA.sta.password);
+		update_prov_data();
 	}
 	else
 	{
@@ -471,6 +477,10 @@ esp_err_t xPostWifiCred(httpd_req_t *req)
 
 		ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_configSTA));
 		ESP_ERROR_CHECK(esp_wifi_connect());
+		xObjProvData.isProvisioned = 1;
+		strcpy(xObjProvData.ssid, (char *)wifi_configSTA.sta.ssid);
+		strcpy(xObjProvData.password, (char *)wifi_configSTA.sta.password);
+		update_prov_data();
 		startServer();		
 	}
 	
@@ -484,38 +494,37 @@ httpd_uri_t xPostWifiCredUri = {
 		.user_ctx  = NULL,
 };
 
-
-esp_err_t xPostSetStaticIp(httpd_req_t *req)
+esp_err_t xPostIpCred(httpd_req_t *req)
 {
 	vGetPostData(req);
 	cJSON *root = cJSON_Parse(cPostReqBuf);
-	if(cJSON_GetObjectItem(root, "setStatic")->valueint == true)
+	if(cJSON_GetObjectItem(root, "static")->valueint == 1)
 	{
-		ESP_LOGI("", "Static Ip is Assigned !!!");	
-		xObjProvData.isStatic_ip = 1;
-		ESP_LOGI("", "IP = [%s]", cJSON_GetObjectItem(root, "ip")->valuestring);
-		ESP_LOGI("", "Gateway = [%s]", cJSON_GetObjectItem(root, "gw")->valuestring);
-		ESP_LOGI("", "Netmask = [%s]", cJSON_GetObjectItem(root, "netmask")->valuestring);
+		xObjProvData.isStatic_ip = true;
+		ESP_LOGI("", "Static ip is Assigned !!!");
+		ESP_LOGI("", "Staitc Ip Address = [%s]", cJSON_GetObjectItem(root, "ip")->valuestring);
+		ESP_LOGI("", "Subnet Mask 		= [%s]", cJSON_GetObjectItem(root, "subnet")->valuestring);
+		ESP_LOGI("", "Default Gateway	= [%s]", cJSON_GetObjectItem(root, "gw")->valuestring);
 		strcpy((char *)xObjProvData.static_ip_addr, cJSON_GetObjectItem(root, "ip")->valuestring);
 		strcpy((char *)xObjProvData.static_ip_gw, cJSON_GetObjectItem(root, "gw")->valuestring);
-		strcpy((char *)xObjProvData.static_ip_netmask, cJSON_GetObjectItem(root, "netmask")->valuestring);
+		strcpy((char *)xObjProvData.static_ip_netmask, cJSON_GetObjectItem(root, "subnet")->valuestring);
+		httpd_resp_send(req, (char *)pcPostResOk, strlen(pcPostResOk));
 	}
-	else{
-		ESP_LOGI("", "DHCP is Enabled !!!");	
-		xObjProvData.isStatic_ip = 0;
+	else
+	{
+		xObjProvData.isStatic_ip = false;
+		ESP_LOGI("", "DHCP is set.");
+		httpd_resp_send(req, (char *)pcPostResOk, strlen(pcPostResOk));
 	}
-
 	cJSON_Delete(root);
-	httpd_resp_send(req, (char *)pcPostResOk, strlen(pcPostResOk));
 	update_prov_data();
-	
 	return ESP_OK;
 }
 
-httpd_uri_t xPostSetStaticIpUri = {
-		.uri       = "/SetStaticIp",
+httpd_uri_t xPostIpCredUri = {
+		.uri       = "/ipcred",
 		.method    = HTTP_POST,
-		.handler   = xPostSetStaticIp,
+		.handler   = xPostIpCred,
 		.user_ctx  = NULL,
 };
 
@@ -528,6 +537,29 @@ esp_err_t xIndex_page(httpd_req_t *req)
     extern const unsigned char index_end[]   asm("_binary_home_html_end");
     const size_t index_size = (index_end - index_start);
 	httpd_resp_send_chunk(req, (char *)index_start, index_size);
+	httpd_resp_sendstr_chunk(req, "<script>");
+	httpd_resp_sendstr_chunk(req, "document.getElementById('1').checked = ");
+	httpd_resp_sendstr_chunk(req,(xObjProvRelayData.relay_state & 0x01) ? "true;":"false;");
+	httpd_resp_sendstr_chunk(req, "document.getElementById('2').checked = ");
+	httpd_resp_sendstr_chunk(req,((xObjProvRelayData.relay_state>>1) & 0x01) ? "true;":"false;");
+	httpd_resp_sendstr_chunk(req, "document.getElementById('3').checked = ");
+	httpd_resp_sendstr_chunk(req,(xObjProvRelayData.relay_state>>2 & 0x01) ? "true;":"false;");
+	httpd_resp_sendstr_chunk(req, "document.getElementById('4').checked = ");
+	httpd_resp_sendstr_chunk(req,(xObjProvRelayData.relay_state>>3 & 0x01) ? "true;":"false;");
+	httpd_resp_sendstr_chunk(req, "document.getElementById('5').checked = ");
+	httpd_resp_sendstr_chunk(req,(xObjProvRelayData.relay_state>>4 & 0x01) ? "true;":"false;");
+	httpd_resp_sendstr_chunk(req, "document.getElementById('6').checked = ");
+	httpd_resp_sendstr_chunk(req,(xObjProvRelayData.relay_state>>5 & 0x01) ? "true;":"false;");
+	httpd_resp_sendstr_chunk(req, "document.getElementById('7').checked = ");
+	httpd_resp_sendstr_chunk(req,(xObjProvRelayData.relay_state>>6 & 0x01) ? "true;":"false;");
+	httpd_resp_sendstr_chunk(req, "document.getElementById('8').checked = ");
+	httpd_resp_sendstr_chunk(req,(xObjProvRelayData.relay_state>>7 & 0x01) ? "true;":"false;");
+	httpd_resp_sendstr_chunk(req, "document.getElementById('0').checked = ");
+	httpd_resp_sendstr_chunk(req,(xObjProvRelayData.relay_state == 0xFF) ? "true;":"false;");
+	httpd_resp_sendstr_chunk(req,"</script>");
+	httpd_resp_sendstr_chunk(req,"<div class=\"footer\">This page is created By <b>Ashish Pilojpara !!!</b></div>"); 
+	httpd_resp_sendstr_chunk(req,"</body>");
+	httpd_resp_sendstr_chunk(req,"</html>");
 	httpd_resp_sendstr_chunk(req, NULL);
 	
 	return ESP_OK;
@@ -605,13 +637,73 @@ httpd_uri_t xPostDeviceTypeUri = {
 esp_err_t xGetDeviceInfo(httpd_req_t *req)
 {
 
-	ESP_LOGI("", "Device Info");
-	cJSON *root = cJSON_CreateObject();
-	cJSON_AddNumberToObject(root, "device_type", DEVICE_TYPE);
-	char *res;
-	res = cJSON_PrintUnformatted(root);
-	httpd_resp_send(req, (char *)res, strlen(res));
-	cJSON_Delete(root);
+	/* Get handle to embedded file upload script */
+    extern const unsigned char info_start[] asm("_binary_info_html_start");
+    extern const unsigned char info_end[]   asm("_binary_info_html_end");
+    const size_t info_size = (info_end - info_start);
+	httpd_resp_send_chunk(req, (char *)info_start, info_size);
+	httpd_resp_sendstr_chunk(req,"<div id=\"wifi_div\">");
+    httpd_resp_sendstr_chunk(req,"<h3>Saved Wi-Fi Network</h3>");
+    httpd_resp_sendstr_chunk(req,"<b>SSID:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b>");
+	if(strlen(xObjProvData.ssid)>0)	httpd_resp_sendstr_chunk(req,xObjProvData.ssid);
+	httpd_resp_sendstr_chunk(req,"<br>");
+	httpd_resp_sendstr_chunk(req,"<b>Password: </b>");
+	if(strlen(xObjProvData.password)>0)	httpd_resp_sendstr_chunk(req,xObjProvData.password);
+	httpd_resp_sendstr_chunk(req,"<br>");
+	httpd_resp_sendstr_chunk(req,"<br>");
+	httpd_resp_sendstr_chunk(req,"</div>");
+
+	httpd_resp_sendstr_chunk(req,"<div id=\"wifi_div\">");
+    httpd_resp_sendstr_chunk(req,"<h3>IP Address Configuration</h3>");
+	if(xObjProvData.isStatic_ip == true)
+	{
+		httpd_resp_sendstr_chunk(req,"<b>Static IP is set.</b><br>");
+		httpd_resp_sendstr_chunk(req,"<b>IP Address:&nbsp;&nbsp;&nbsp;&nbsp;</b>");
+		if(strlen(xObjProvData.static_ip_addr)>0)	httpd_resp_sendstr_chunk(req,xObjProvData.static_ip_addr);
+		httpd_resp_sendstr_chunk(req,"<br>");
+		httpd_resp_sendstr_chunk(req,"<b>Subnet Mask: </b>");
+		if(strlen(xObjProvData.static_ip_netmask)>0) httpd_resp_sendstr_chunk(req,xObjProvData.static_ip_netmask);
+		httpd_resp_sendstr_chunk(req,"<br>");
+		httpd_resp_sendstr_chunk(req,"<b>Gateway: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b>");
+		if(strlen(xObjProvData.static_ip_gw)>0) httpd_resp_sendstr_chunk(req,xObjProvData.static_ip_gw);
+		
+	}
+	else{
+		httpd_resp_sendstr_chunk(req,"<b>DHCP is set.</b>");
+	}
+	httpd_resp_sendstr_chunk(req,"<br>");
+	httpd_resp_sendstr_chunk(req,"<br>");
+	httpd_resp_sendstr_chunk(req,"</div>");
+
+	httpd_resp_sendstr_chunk(req,"<div id=\"wifi_div\">");
+    httpd_resp_sendstr_chunk(req,"<h3>TCP Server Configuration</h3>");
+	httpd_resp_sendstr_chunk(req,"Server is listening on port : <b>");
+	httpd_resp_sendstr_chunk(req,"2709</b>");
+	httpd_resp_sendstr_chunk(req,"<br>");
+	httpd_resp_sendstr_chunk(req,"<br>");
+	httpd_resp_sendstr_chunk(req,"</div>");
+
+	httpd_resp_sendstr_chunk(req,"<div id=\"wifi_div\">");
+    httpd_resp_sendstr_chunk(req,"<h3>Relay ON/OFF Commands</h3>");
+	httpd_resp_sendstr_chunk(req,"Relay 1 ON Command : <b>Relay1_ON</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Relay 1 OFF Command : <b>Relay1_OFF</b><br>");
+	httpd_resp_sendstr_chunk(req,"Relay 2 ON Command : <b>Relay2_ON</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Relay 2 OFF Command : <b>Relay2_OFF</b><br>");
+	httpd_resp_sendstr_chunk(req,"Relay 3 ON Command : <b>Relay3_ON</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Relay 3 OFF Command : <b>Relay3_OFF</b><br>");
+	httpd_resp_sendstr_chunk(req,"Relay 4 ON Command : <b>Relay4_ON</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Relay 4 OFF Command : <b>Relay4_OFF</b><br>");
+	httpd_resp_sendstr_chunk(req,"Relay 5 ON Command : <b>Relay5_ON</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Relay 5 OFF Command : <b>Relay5_OFF</b><br>");
+	httpd_resp_sendstr_chunk(req,"Relay 6 ON Command : <b>Relay6_ON</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Relay 6 OFF Command : <b>Relay6_OFF</b><br>");
+	httpd_resp_sendstr_chunk(req,"Relay 7 ON Command : <b>Relay7_ON</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Relay 7 OFF Command : <b>Relay7_OFF</b><br>");
+	httpd_resp_sendstr_chunk(req,"Relay 8 ON Command : <b>Relay8_ON</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Relay 8 OFF Command : <b>Relay8_OFF</b><br>");
+	httpd_resp_sendstr_chunk(req,"All Relay ON Command : <b>All_Relay_ON</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; All Relay OFF Command : <b>All_Relay_OFF</b><br>");
+	
+	httpd_resp_sendstr_chunk(req,"<br>");
+	httpd_resp_sendstr_chunk(req,"</div>");
+
+	httpd_resp_sendstr_chunk(req,"<div class=\"footer\">This page is created By <b>Ashish Pilojpara !!!</b></div>"); 
+
+	httpd_resp_sendstr_chunk(req,"</body>");
+	httpd_resp_sendstr_chunk(req,"</html>");
+	httpd_resp_sendstr_chunk(req, NULL);
+	
 	return ESP_OK;
 }
 
@@ -645,12 +737,29 @@ esp_err_t xPostrelaycmd(httpd_req_t *req)
 		{
 			gpio_set_level(xObjRelay[i].gpioNo, atoi(relay_val) && 0x01);
 		}
+		if(atoi(relay_val) && 0x01)
+		{
+			xObjProvRelayData.relay_state = 0xff;
+		}
+		else
+		{
+			xObjProvRelayData.relay_state = 0;
+		}
 	}
 	else
 	{
 		gpio_set_level(xObjRelay[atoi(relay_no)-1].gpioNo, atoi(relay_val) && 0x01);
+		if(atoi(relay_val) & 0x01)
+		{
+			xObjProvRelayData.relay_state = xObjProvRelayData.relay_state | 1 << (atoi(relay_no)-1);
+		}
+		else
+		{
+			xObjProvRelayData.relay_state = xObjProvRelayData.relay_state & ~(1 << (atoi(relay_no)-1));
+		}
 	}
 	
+	update_prov_relay_data();
 	httpd_resp_send(req, (char *)pcPostResOk, strlen(pcPostResOk));
 	gpio_set_level(COMM_STATUS_LED_PIN, LED_OFF);
 	gpio_set_level(CLIENT_CONNECT_LED_PIN, LED_OFF);
@@ -685,7 +794,7 @@ void startServer()
 		httpd_register_uri_handler(xServer, &xGetInfoUri);
 		httpd_register_uri_handler(xServer, &xPostDeviceTypeUri);
 		httpd_register_uri_handler(xServer, &xPostRelayCMDUri);
-		httpd_register_uri_handler(xServer, &xPostSetStaticIpUri);
+		httpd_register_uri_handler(xServer, &xPostIpCredUri);
 		httpd_register_uri_handler(xServer, &xGetIndexPageUri);
 		httpd_register_uri_handler(xServer, &xGetSettingsPageUri);
 		

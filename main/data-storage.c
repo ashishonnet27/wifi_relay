@@ -57,6 +57,10 @@ void read_stored_prov_data()
 	printf("PROV: [%d]\n", xObjProvData.isProvisioned);
 	printf("SSID: [%s]\n", xObjProvData.ssid);
 	printf("PASS: [%s]\n", xObjProvData.password);
+	printf("Static: [%d]\n", xObjProvData.isStatic_ip);
+	printf("IP: [%s]\n", xObjProvData.static_ip_addr);
+	printf("Subnet: [%s]\n", xObjProvData.static_ip_netmask);
+	printf("Gw: [%s]\n", xObjProvData.static_ip_gw);
 	// update_prov_data();
 }
 
@@ -72,6 +76,51 @@ esp_err_t update_prov_data()
 	printf("Prov data updated\n");
 	return ESP_OK;
 }
+
+void read_stored_relay_data()
+{
+	xObjProvRelayData.relay_state = 0;
+	FILE *fp;
+	fp = fopen("/spiffs/relay", "rb");
+	if(fp == NULL)
+		return;
+	fseek(fp, -1, SEEK_END);
+	fread(&xObjProvRelayData, sizeof(xObjProvRelayData), 1, fp);
+	fclose(fp);
+	
+}
+
+esp_err_t update_prov_relay_data()
+{
+	FILE *fp;
+
+	fp = fopen("/spiffs/relay", "ab");
+	if(fp == NULL)
+		return ESP_FAIL;
+	fwrite(&xObjProvRelayData, sizeof(xObjProvRelayData), 1, fp);
+	
+	if(ftell(fp) > 200)
+	{
+		fclose(fp);
+		printf("Relay file limit exceed !!!\n");
+
+		if(remove("/spiffs/relay") == 0)
+		{
+			printf("Relay file deleted !!!\n");
+			fp = fopen("/spiffs/relay", "ab");
+			if(fp == NULL)
+				return ESP_FAIL;
+			fwrite(&xObjProvRelayData, sizeof(xObjProvRelayData), 1, fp);
+			fclose(fp);
+		}
+	}
+	else{
+		fclose(fp);
+	}
+	printf("Prov relay data updated\n");
+	return ESP_OK;
+}
+
 esp_err_t get_stored_data()
 {
 	size_t total = 0, used = 0;
@@ -89,7 +138,7 @@ esp_err_t get_stored_data()
 	//read_hello_txt();
 
 	read_stored_prov_data();
-
+	read_stored_relay_data();
 
 	// getDeviceTimeZone(&device_timezone);
 	// printf("\n\n%s\n\n", device_timezone.tzone);
@@ -101,20 +150,7 @@ esp_err_t get_stored_data()
 	return ret;
 }
 
-// void read_stored_relay_data()
-// {
-// 	FILE *fp;
-// 	fp = fopen("/spiffs/relay", "rb");
-// 	if(fp == NULL)
-// 		return;
-// 	fread(&xObjProvData, sizeof(xObjProvData), 1, fp);
-// 	fclose(fp);
 
-// 	printf("PROV: [%d]\n", xObjProvData.isProvisioned);
-// 	printf("SSID: [%s]\n", xObjProvData.ssid);
-// 	printf("PASS: [%s]\n", xObjProvData.password);
-// 	// update_prov_data();
-// }
 
 
 

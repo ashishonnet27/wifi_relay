@@ -2,7 +2,7 @@
 <head>
     <title>Web Relay Controller</title>
   <meta name="viewport" content="width=device-width, initial-scale=0.5">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
   <style>
     html {font-family: Arial; display: inline-block; text-align: center;}
 
@@ -65,6 +65,22 @@
       style="width:100%;";
     }
     
+    .footer {
+      position: fixed;
+      overflow: hidden;
+      background-color: #d4d4d4;
+      color: black;
+      left: 0;
+      bottom: 0;
+      font-size: 14px; 
+      padding: 10px 10px 0px 10px;
+      width:100%;
+      height: 30px;
+      text-align: center;
+    }
+
+    
+
     .header a {
       float: left;
       color: black;
@@ -83,7 +99,7 @@
     }
     
     .header a:hover {
-      background-color: rgb(80, 168, 255);
+      background-color: rgb(224, 224, 224);
       color: black;
     }
     
@@ -118,9 +134,9 @@
   <div class="header"> 
     <a id="root_btn"  href="/settings" class="logo" >Web Relay Controller</a>
     <div class="header-right">
-      <a id="home_btn" href="/settings" ><i class="fa fa-home"></i>Home</a>
-      <a id="settings_btn" href="/settings" ><i class="fa fa-gear"></i>Settings</a>
-      <a id="info_btn" href="/settings" ><i class="fa fa-info"></i>nfo</a>
+      <a id="home_btn" href="/" >Home</a>
+      <a id="settings_btn" href="/settings" >Settings</a>
+      <a id="info_btn" href="/info" >Info</a>
     </div>
   </div>
   <div>
@@ -161,7 +177,7 @@
     </table>
   
   <h4>ALL Relay</h4><label class="switch"><input type="checkbox" onchange=toggleCheckbox(this) id="0"  ><span class="slider"></span></label>
-
+    <br><br><br><br>
 </div>
 
 <script>function toggleCheckbox(element) {
@@ -224,5 +240,3 @@
 
 </script>
 
-</body>
-</html>

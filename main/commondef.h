@@ -73,7 +73,7 @@
 #define	COMM_STATUS_LED_PIN 		27	//IO-27    <<----------------- Need changes
 
 
-#define SWRST				14	//IO-14
+#define RESET_INPUT_PIN				14	//IO-14
 
 
 
@@ -102,7 +102,7 @@ xSemaphoreHandle file_operation_mutex;
 
 xRelayData xObjRelay[MAX_RELAY];
 // xSwitchData xObjSwitch[MAX_SWITCH];
-xSwitchData xObjRSTSwitch;
+// xSwitchData xObjRSTSwitch;
 // xRGBLED	xObjRGBLED[MAX_RGBLED];
 
 

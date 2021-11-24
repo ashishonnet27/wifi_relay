@@ -25,6 +25,15 @@ typedef struct __xProvData__
 
 xProvData xObjProvData;
 
+
+typedef struct __xProvRelayData__
+{
+	uint8_t relay_state;
+}xProvRelayData;
+
+xProvRelayData xObjProvRelayData;
+
+
 // typedef struct __xRLScheduler__
 // {
 // 	uint8_t active;
